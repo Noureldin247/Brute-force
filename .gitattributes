@@ -52,3 +52,52 @@ def generate_prime(bits):
         p = random.randint(2 ** (bits - 1), 2 ** bits - 1)
         if is_probable_prime(p):
             return p
+
+def generate_keys(bits):
+    p = generate_prime(bits // 2)
+    q = generate_prime(bits // 2)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    e = 65537  
+    while gcd(e, phi) != 1:
+        e = random.randint(2, phi - 1)
+
+    d = mod_inverse(e, phi)
+    return (n, e), (n, d)
+
+def crack_private_key_brute_force(public_key):
+    n, e = public_key
+    start_time = time.perf_counter()
+
+    
+    for i in range(2, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            p = i
+            q = n // i
+            phi = (p - 1) * (q - 1)
+            d = mod_inverse(e, phi)
+            runtime = time.perf_counter() - start_time
+            return (n, d), runtime
+
+    return None, None
+
+def main():
+    print("\nBrute Force Approach Program")
+    bits = int(input("Enter the number of bits for key generation (8 or 16): "))
+    if bits not in [8, 16]:
+        print("Invalid input! Please enter 8 or 16.")
+        return
+    
+    public_key, private_key = generate_keys(bits)
+    print(f"Public Key: {public_key}")
+    print(f"Private Key: {private_key}")
+
+    cracked_private_key, runtime = crack_private_key_brute_force(public_key)
+    if cracked_private_key:
+        print(f"\nCracked Private Key: {cracked_private_key}")
+        print(f"Brute force runtime: {runtime:.6f} seconds")
+    else:
+        print("\nBrute force attack failed to crack the private key.")
+
+if __name__ == "__main__":
+    main()
